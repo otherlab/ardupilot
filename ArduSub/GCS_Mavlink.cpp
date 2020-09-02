@@ -2,6 +2,10 @@
 
 #include "GCS_Mavlink.h"
 
+#include <AP_Relay/AP_Relay.h>
+
+#include <iostream>
+
 /*
  *  !!NOTE!!
  *
@@ -107,14 +111,11 @@ void GCS_MAVLINK_Sub::send_scaled_pressure3()
         AP_HAL::millis(),
         0,
         0,
-        sub.celsius.temperature() * 100,
-        0); // TODO: use differential pressure temperature
+        sub.celsius.temperature() * 100,0); // TODO: use differential pressure temperature
 }
 
 bool GCS_MAVLINK_Sub::send_info()
 {
-    // Just do this all at once, hopefully the hard-wire telemetry requirement means this is ok
-    // Name is char[10]
     CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
     send_named_float("CamTilt",
                      1 - (SRV_Channels::get_output_norm(SRV_Channel::k_mount_tilt) / 2.0f + 0.5f));
@@ -128,7 +129,7 @@ bool GCS_MAVLINK_Sub::send_info()
                      sub.quarter_turn_count/4);
 
     CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
-    send_named_float("Lights1",
+    send_named_float("iLghts1",
                      SRV_Channels::get_output_norm(SRV_Channel::k_rcin9) / 2.0f + 0.5f);
 
     CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
@@ -143,6 +144,18 @@ bool GCS_MAVLINK_Sub::send_info()
 
     CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
     send_named_float("RollPitch", sub.roll_pitch_flag);
+
+    CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
+    send_named_float("Relay1", float(AP::relay()->get(0)));
+
+    CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
+    send_named_float("Relay2", float(AP::relay()->get(1)));
+
+    CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
+    send_named_float("Relay3", float(AP::relay()->get(2)));
+
+    CHECK_PAYLOAD_SIZE(NAMED_VALUE_FLOAT);
+    send_named_float("Relay4", float(AP::relay()->get(3)));
 
     return true;
 }
@@ -551,7 +564,7 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
         break;
     }
 
-    
+
     case MAVLINK_MSG_ID_SET_ATTITUDE_TARGET: { // MAV ID: 82
         // decode packet
         mavlink_set_attitude_target_t packet;
