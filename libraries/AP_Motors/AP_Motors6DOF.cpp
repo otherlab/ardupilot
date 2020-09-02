@@ -172,8 +172,13 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
         break;
 
     case SUB_FRAME_CUSTOM:
-        // Put your custom motor setup here
-        //break;
+    	add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              1.0f,           0,                  -1.0f,              1.0f,           1);
+		add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              -1.0f,          0,                  -1.0f,              -1.0f,          2);
+		add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              -1.0f,          0,                  1.0f,               1.0f,           3);
+		add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              1.0f,           0,                  1.0f,               -1.0f,          4);
+		add_motor_raw_6dof(AP_MOTORS_MOT_5,     0,           1.0f,              0,              -1.0f,              0,                  0,              5);
+		add_motor_raw_6dof(AP_MOTORS_MOT_6,     0,          -1.0f,              0,              -1.0f,              0,                  0,              6);
+		break;
 
     case SUB_FRAME_SIMPLEROV_3:
         add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              -1.0f,          0,                  1.0f,               0,              1);
@@ -233,6 +238,9 @@ void AP_Motors6DOF::output_to_motors()
 {
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
+    // stuff added for spydra with skewed motor commands
+    int16_t motor_center_pwm_spydra = 1100; //hard code a center value for the spydra ROV was 1500 for normal rovs
+    int16_t motor_out_temp_val; //place to keep intermediate vals while calculating spydra motor output
 
     switch (_spool_state) {
     case SpoolState::SHUT_DOWN:
@@ -240,7 +248,7 @@ void AP_Motors6DOF::output_to_motors()
         // set motor output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = 1500;
+                motor_out[i] = motor_center_pwm_spydra;
             }
         }
         break;
@@ -248,7 +256,7 @@ void AP_Motors6DOF::output_to_motors()
         // sends output to motors when armed but not flying
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = 1500;
+                motor_out[i] = motor_center_pwm_spydra;
             }
         }
         break;
@@ -258,7 +266,13 @@ void AP_Motors6DOF::output_to_motors()
         // set motor output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
+                motor_out_temp_val = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
+                if (motor_out_temp_val >= 1500) {
+                	motor_out_temp_val = (motor_out_temp_val-1500)*3.1f+motor_center_pwm_spydra;
+				} else {
+					motor_out_temp_val = (motor_out_temp_val-1500)*1.1f+motor_center_pwm_spydra;
+				}
+                motor_out[i] = motor_out_temp_val;
             }
         }
         break;
