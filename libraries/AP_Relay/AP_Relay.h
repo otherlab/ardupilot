@@ -41,6 +41,7 @@ public:
     static AP_Relay *get_singleton(void) {return singleton; }
 
     static const struct AP_Param::GroupInfo        var_info[];
+    bool get(uint8_t instance);
 
 private:
     static AP_Relay *singleton;

@@ -10,6 +10,9 @@
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
   #define RELAY1_PIN_DEFAULT 13
+  #define RELAY1_PIN_DEFAULT 50
+  #define RELAY1_PIN_DEFAULT 51
+  #define RELAY1_PIN_DEFAULT 52
 
 #elif CONFIG_HAL_BOARD == HAL_BOARD_LINUX
   #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_BLUE
@@ -142,6 +145,12 @@ void AP_Relay::set(const uint8_t instance, const bool value)
     }
     hal.gpio->pinMode(_pin[instance], HAL_GPIO_OUTPUT);
     hal.gpio->write(_pin[instance], value);
+}
+
+bool AP_Relay::get(const uint8_t instance)
+{
+    bool on = hal.gpio->read(_pin[instance]);
+    return on;
 }
 
 void AP_Relay::toggle(uint8_t instance)
