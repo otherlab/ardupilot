@@ -27,7 +27,9 @@ const uint8_t SERVO_CHAN_3 = 11; // Pixhawk Aux3
 bool controls_reset_since_input_hold = true;
 }
 
+
 void Sub::init_joystick()
+
 {
     default_js_buttons();
 
@@ -360,36 +362,16 @@ void Sub::handle_jsbutton_press(uint8_t _button, bool shift, bool held)
         }
         break;
     case JSButton::button_function_t::k_relay_1_on:
-        relay.on(0);
+        //relay.on(0);
         break;
     case JSButton::button_function_t::k_relay_1_off:
-        relay.off(0);
-        break;
-    case JSButton::button_function_t::k_relay_1_toggle:
-        if (!held) {
-            relay.toggle(0);
-        }
-        break;
-    case JSButton::button_function_t::k_relay_1_momentary:
-        if (!held) {
-            relay.on(0);
-        }
+        //relay.off(0);
         break;
     case JSButton::button_function_t::k_relay_2_on:
-        relay.on(1);
+        chargeRequested=true;
         break;
     case JSButton::button_function_t::k_relay_2_off:
-        relay.off(1);
-        break;
-    case JSButton::button_function_t::k_relay_2_toggle:
-        if (!held) {
-            relay.toggle(1);
-        }
-        break;
-    case JSButton::button_function_t::k_relay_2_momentary:
-        if (!held) {
-            relay.on(1);
-        }
+        chargeRequested=false;
         break;
     case JSButton::button_function_t::k_relay_3_on:
         relay.on(2);
@@ -596,10 +578,10 @@ void Sub::handle_jsbutton_release(uint8_t _button, bool shift) {
     // Act based on the function assigned to this button
     switch (get_button(_button)->function(shift)) {
     case JSButton::button_function_t::k_relay_1_momentary:
-        relay.off(0);
+        //relay.off(0);
         break;
     case JSButton::button_function_t::k_relay_2_momentary:
-        relay.off(1);
+        //relay.off(1);
         break;
     case JSButton::button_function_t::k_relay_3_momentary:
         relay.off(2);

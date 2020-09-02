@@ -654,6 +654,14 @@ private:
                   "_failsafe_priorities is missing the sentinel");
 
 
+    //MARINER KP 090120
+    void capacitor_loop(void);
+    bool chargeRequested = false;
+    uint32_t chargeStartTime = 0;
+    const uint32_t chargeTimeRequired = 3e3;
+    bool isCharging(){return chargeStartTime!=0;}
+
+
 public:
     void mainloop_failsafe_check();
 };

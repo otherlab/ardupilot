@@ -24,6 +24,7 @@
   should be listed here, along with how often they should be called (in hz)
   and the maximum time they are expected to take (in microseconds)
  */
+
 const AP_Scheduler::Task Sub::scheduler_tasks[] = {
     SCHED_TASK(fifty_hz_loop,         50,     75),
     SCHED_TASK_CLASS(AP_GPS, &sub.gps, update, 50, 200),
@@ -78,6 +79,7 @@ const AP_Scheduler::Task Sub::scheduler_tasks[] = {
 #ifdef USERHOOK_SUPERSLOWLOOP
     SCHED_TASK(userhook_SuperSlowLoop, 1,   75),
 #endif
+    SCHED_TASK(capacitor_loop,         1,     75),
 };
 
 void Sub::get_scheduler_tasks(const AP_Scheduler::Task *&tasks,
@@ -155,6 +157,7 @@ void Sub::fifty_hz_loop()
     rc().read_input();
     SRV_Channels::output_ch_all();
 }
+
 
 // update_batt_compass - read battery and compass
 // should be called at 10hz
@@ -323,6 +326,28 @@ bool Sub::control_check_barometer()
     }
 #endif
     return true;
+}
+
+void Sub::capacitor_loop(void){
+    uint32_t now = AP_HAL::millis();
+    uint32_t diff = now - chargeStartTime;
+
+    bool charging = isCharging();
+    //TODO: Here is where cap charge state check would go
+    if(charging && diff > chargeTimeRequired){
+        chargeStartTime=0;
+        //turn off our charging relay and turn on our drive relay
+        AP::relay()->off(0);
+        AP::relay()->on(1);
+        return;
+    }
+
+    //trigger relay 0 and start timer
+    if(chargeRequested && !charging){
+        chargeStartTime = now;
+        AP::relay()->on(0);
+        return;
+    }
 }
 
 AP_HAL_MAIN_CALLBACKS(&sub);
