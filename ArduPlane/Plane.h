@@ -177,6 +177,7 @@ private:
     RC_Channel *channel_pitch;
     RC_Channel *channel_throttle;
     RC_Channel *channel_rudder;
+    RC_Channel *channel_airbrake;
 
     AP_Logger logger;
 
@@ -394,13 +395,6 @@ private:
         float locked_roll_err;
         int32_t locked_pitch_cd;
     } acro_state;
-
-    // CRUISE controller state
-    struct CruiseState {
-        bool locked_heading;
-        int32_t locked_heading_cd;
-        uint32_t lock_timer_ms;
-    } cruise_state;
 
     struct {
         uint32_t last_tkoff_arm_time;
@@ -1041,6 +1035,7 @@ private:
     void set_servos_flaps(void);
     void set_landing_gear(void);
     void dspoiler_update(void);
+    void airbrake_update(void);
     void servo_output_mixers(void);
     void servos_output(void);
     void servos_auto_trim(void);

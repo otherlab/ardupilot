@@ -700,7 +700,7 @@ void Compass::init()
             for (Priority j(i+1); j<COMPASS_MAX_INSTANCES; j++) {
                 int32_t temp;
                 if (_priority_did_stored_list[j] == _priority_did_stored_list[i]) {
-                    _priority_did_stored_list[j].set_and_save(0);
+                    _priority_did_stored_list[j].set_and_save_ifchanged(0);
                 }
                 if (_priority_did_stored_list[j] == 0) {
                     continue;
@@ -732,7 +732,13 @@ void Compass::init()
     }
 #endif
 
+#if COMPASS_MAX_INSTANCES > 1
+    // This method calls set_and_save_ifchanged on parameters
+    // which are set() but not saved() during normal runtime,
+    // do not move this call without ensuring that is not happening
+    // read comments under set_and_save_ifchanged for details
     _reorder_compass_params();
+#endif
 
     if (_compass_count == 0) {
         // detect available backends. Only called once
@@ -801,6 +807,7 @@ Compass::Priority Compass::_update_priority_list(int32_t dev_id)
 #endif
 
 
+#if COMPASS_MAX_INSTANCES > 1
 // This method reorganises devid list to match
 // priority list, only call before detection at boot
 void Compass::_reorder_compass_params()
@@ -808,7 +815,16 @@ void Compass::_reorder_compass_params()
     mag_state swap_state;
     StateIndex curr_state_id;
     for (Priority i(0); i<COMPASS_MAX_INSTANCES; i++) {
-        curr_state_id = _get_state_id(i);
+        if (_priority_did_list[i] == 0) {
+            continue;
+        }
+        curr_state_id = COMPASS_MAX_INSTANCES;
+        for (StateIndex j(0); j<COMPASS_MAX_INSTANCES; j++) {
+            if (_priority_did_list[i] == _state[j].dev_id) {
+                curr_state_id = j;
+                break;
+            }
+        }
         if (curr_state_id != COMPASS_MAX_INSTANCES && uint8_t(curr_state_id) != uint8_t(i)) {
             //let's swap
             swap_state.copy_from(_state[curr_state_id]);
@@ -817,17 +833,18 @@ void Compass::_reorder_compass_params()
         }
     }
 }
+#endif
 
 void Compass::mag_state::copy_from(const Compass::mag_state& state)
 {
-    external.set_and_save(state.external);
-    orientation.set_and_save(state.orientation);
-    offset.set_and_save(state.offset);
-    diagonals.set_and_save(state.diagonals);
-    offdiagonals.set_and_save(state.offdiagonals);
-    scale_factor.set_and_save(state.scale_factor);
-    dev_id.set_and_save(state.dev_id);
-    motor_compensation.set_and_save(state.motor_compensation);
+    external.set_and_save_ifchanged(state.external);
+    orientation.set_and_save_ifchanged(state.orientation);
+    offset.set_and_save_ifchanged(state.offset);
+    diagonals.set_and_save_ifchanged(state.diagonals);
+    offdiagonals.set_and_save_ifchanged(state.offdiagonals);
+    scale_factor.set_and_save_ifchanged(state.scale_factor);
+    dev_id.set_and_save_ifchanged(state.dev_id);
+    motor_compensation.set_and_save_ifchanged(state.motor_compensation);
     expected_dev_id = state.expected_dev_id;
     detected_dev_id = state.detected_dev_id;
 }
